@@ -11,6 +11,7 @@ import logging
 from numba.core.errors import DeprecationError, NumbaDeprecationWarning
 from numba.stencils.stencil import stencil
 from numba.core import config, sigutils, registry, cpu_dispatcher
+from numba.dppl import gpu_dispatcher
 
 
 _logger = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
             return cuda.jit(func)
         if config.DISABLE_JIT and not target == 'npyufunc':
             return func
-        if target == 'dppl':
+        if target == 'dppl_kernel':
             from . import dppl
             return dppl.jit(func)
         disp = dispatcher(py_func=func, locals=locals,

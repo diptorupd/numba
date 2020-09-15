@@ -18,7 +18,7 @@ class TestVectorize(DPPLTestCase):
         def axy(a, x, y):
             return a * x + y
 
-        @njit(parallel={'offload':True})
+        @njit(target='dppl')
         def f(a0, a1):
             return np.cos(axy(a0, np.sin(a1) - 1., 1.) )
 
