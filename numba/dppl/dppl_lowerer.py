@@ -1012,6 +1012,8 @@ def lower_parfor_rollback(lowerer, parfor):
 
     try:
         _lower_parfor_gufunc(lowerer, parfor)
+        if numba.dppl.compiler.DEBUG:
+            print("Parfor lowered on GPU")
     except Exception as e:
         msg = ("Failed to lower parfor on GPU")
         warnings.warn(NumbaPerformanceWarning(msg, parfor.loc))
