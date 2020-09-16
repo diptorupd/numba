@@ -45,7 +45,6 @@ class ParallelOptions(object):
     Options for controlling auto parallelization.
     """
     def __init__(self, value):
-        self.gen_spirv = False
         if isinstance(value, bool):
             self.enabled = value
             self.comprehension = value
@@ -64,7 +63,6 @@ class ParallelOptions(object):
             self.stencil = value.pop('stencil', True)
             self.fusion = value.pop('fusion', True)
             self.prange = value.pop('prange', True)
-            self.gen_spirv = value.pop('offload', False)
             if value:
                 msg = "Unrecognized parallel options: %s" % value.keys()
                 raise NameError(msg)
