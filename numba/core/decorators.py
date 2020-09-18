@@ -12,6 +12,7 @@ from numba.core.errors import DeprecationError, NumbaDeprecationWarning
 from numba.stencils.stencil import stencil
 from numba.core import config, sigutils, registry, cpu_dispatcher
 from numba.dppl import gpu_dispatcher
+import dppl.ocldrv as ocldrv
 
 
 _logger = logging.getLogger(__name__)
@@ -176,10 +177,22 @@ def jit(signature_or_function=None, locals={}, target='cpu', cache=False,
         return wrapper
 
 
-def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
-    dispatcher = registry.dispatcher_registry[target]
+def get_current_disp(target):
+    gpu_env = None
+    if ocldrv.runtime.has_gpu_device():
+        gpu_env = ocldrv.runtime.get_gpu_device().get_env_ptr()
+    current_env = None
+    if ocldrv.runtime.has_current_device():
+        current_env = ocldrv.runtime.get_current_device().get_env_ptr()
+    if (gpu_env == current_env) and ocldrv.is_available():
+        return registry.dispatcher_registry['dppl']
 
-    def wrapper(func):
+    return registry.dispatcher_registry[target]
+
+
+def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
+
+    def wrapper(func, dispatcher):
         if config.ENABLE_CUDASIM and target == 'cuda':
             from numba import cuda
             return cuda.jit(func)
@@ -203,7 +216,13 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
                 disp.disable_compile()
         return disp
 
-    return wrapper
+    def __wrapper(func):
+        func.__compiled = {}
+        disp = get_current_disp(target)
+        if not disp in func.__compiled.keys():
+            func.__compiled[disp] = wrapper(func, disp)
+        return func.__compiled[disp]
+    return __wrapper
 
 
 def generated_jit(function=None, target='cpu', cache=False,
