@@ -40,7 +40,7 @@ class TestDPPLFallback(DPPLTestCase):
             return a
 
         def run_dppl():
-            dppl = numba.njit(target='dppl')(np_rand_fallback)
+            dppl = numba.njit(parallel={'offload':True})(np_rand_fallback)
             return dppl()
 
         ref = np_rand_fallback

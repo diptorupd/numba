@@ -5,12 +5,12 @@ from numba.dppl.compiler import DPPLCompiler
 from numba.core.cpu_options import ParallelOptions
 
 
-class GPUDispatcher(dispatcher.Dispatcher):
+class DpplOffloadDispatcher(dispatcher.Dispatcher):
     targetdescr = cpu_target
 
     def __init__(self, py_func, locals={}, targetoptions={}, impl_kind='direct', pipeline_class=compiler.Compiler):
         if dppl_config.dppl_present:
-            targetoptions['parallel'] = {'offload':True}
+            targetoptions['parallel'] = True
             dispatcher.Dispatcher.__init__(self, py_func, locals=locals,
                     targetoptions=targetoptions, impl_kind=impl_kind, pipeline_class=DPPLCompiler)
         else:
@@ -20,4 +20,4 @@ class GPUDispatcher(dispatcher.Dispatcher):
             dispatcher.Dispatcher.__init__(self, py_func, locals=locals,
                 targetoptions=targetoptions, impl_kind=impl_kind, pipeline_class=pipeline_class)
 
-dispatcher_registry['dppl'] = GPUDispatcher
+dispatcher_registry['__dppl_offload_gpu__'] = DpplOffloadDispatcher

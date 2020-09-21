@@ -11,7 +11,7 @@ import logging
 from numba.core.errors import DeprecationError, NumbaDeprecationWarning
 from numba.stencils.stencil import stencil
 from numba.core import config, sigutils, registry, cpu_dispatcher
-from numba.dppl import gpu_dispatcher
+from numba.dppl import dppl_offload_dispatcher
 
 
 _logger = logging.getLogger(__name__)
@@ -145,6 +145,10 @@ def jit(signature_or_function=None, locals={}, target='cpu', cache=False,
     if 'restype' in options:
         raise DeprecationError(_msg_deprecated_signature_arg.format('restype'))
 
+    parallel_option = options.get('parallel')
+    if isinstance(parallel_option, dict) and parallel_option.get('offload') is True:
+        target = '__dppl_offload_gpu__'
+
     options['boundscheck'] = boundscheck
 
     # Handle signature
@@ -185,7 +189,7 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
             return cuda.jit(func)
         if config.DISABLE_JIT and not target == 'npyufunc':
             return func
-        if target == 'dppl_kernel':
+        if target == 'dppl':
             from . import dppl
             return dppl.jit(func)
         disp = dispatcher(py_func=func, locals=locals,

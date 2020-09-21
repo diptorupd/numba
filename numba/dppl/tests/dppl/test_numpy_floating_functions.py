@@ -11,7 +11,7 @@ import dppl.ocldrv as ocldrv
 
 class TestNumpy_floating_functions(DPPLTestCase):
     def test_isfinite(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.isfinite(a)
             return c
@@ -25,7 +25,7 @@ class TestNumpy_floating_functions(DPPLTestCase):
 
 
     def test_isinf(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.isinf(a)
             return c
@@ -38,7 +38,7 @@ class TestNumpy_floating_functions(DPPLTestCase):
         self.assertTrue(np.all(c == d))
 
     def test_isnan(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.isnan(a)
             return c
@@ -52,7 +52,7 @@ class TestNumpy_floating_functions(DPPLTestCase):
 
 
     def test_floor(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.floor(a)
             return c
@@ -65,7 +65,7 @@ class TestNumpy_floating_functions(DPPLTestCase):
 
 
     def test_ceil(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.ceil(a)
             return c
@@ -78,7 +78,7 @@ class TestNumpy_floating_functions(DPPLTestCase):
 
 
     def test_trunc(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a):
             c = np.trunc(a)
             return c

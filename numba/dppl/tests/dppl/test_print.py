@@ -14,7 +14,7 @@ import dppl.ocldrv as ocldrv
 @unittest.skipUnless(ocldrv.has_gpu_device, 'test only on GPU system')
 class TestPrint(DPPLTestCase):
     def test_print_prange(self):
-        @njit(target='dppl')
+        @njit(parallel={'offload':True})
         def f(a, b):
             for i in prange(4):
                 print("before at:", i, b[i, 0])
