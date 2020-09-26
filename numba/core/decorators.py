@@ -11,6 +11,7 @@ import logging
 from numba.core.errors import DeprecationError, NumbaDeprecationWarning
 from numba.stencils.stencil import stencil
 from numba.core import config, extending, sigutils, registry, cpu_dispatcher
+from numba.dppl.target_dispatcher import TargetDispatcher
 
 _logger = logging.getLogger(__name__)
 
@@ -187,9 +188,8 @@ def jit(signature_or_function=None, locals={}, cache=False,
 
 
 def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
-    dispatcher = registry.dispatcher_registry[target]
 
-    def wrapper(func):
+    def wrapper(func, dispatcher):
         if extending.is_jitted(func):
             raise TypeError(
                 "A jit decorator was called on an already jitted function "
@@ -226,7 +226,14 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
                 disp.disable_compile()
         return disp
 
-    return wrapper
+    def __wrapper(func):
+        if target == 'npyufunc' or targetoptions.get('no_cpython_wrapper') == True:
+            disp = registry.dispatcher_registry[target]
+            return wrapper(func, disp)
+
+        disp = TargetDispatcher(func, wrapper, target)
+        return disp
+    return __wrapper
 
 
 def generated_jit(function=None, target='cpu', cache=False,
