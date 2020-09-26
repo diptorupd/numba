@@ -1,8 +1,6 @@
 from numba.core import dispatcher, compiler
 from numba.core.registry import cpu_target, dispatcher_registry
 import numba.dppl_config as dppl_config
-from numba.dppl.compiler import DPPLCompiler
-from numba.core.cpu_options import ParallelOptions
 
 
 class DpplOffloadDispatcher(dispatcher.Dispatcher):
@@ -10,6 +8,7 @@ class DpplOffloadDispatcher(dispatcher.Dispatcher):
 
     def __init__(self, py_func, locals={}, targetoptions={}, impl_kind='direct', pipeline_class=compiler.Compiler):
         if dppl_config.dppl_present:
+            from numba.dppl.compiler import DPPLCompiler
             targetoptions['parallel'] = True
             dispatcher.Dispatcher.__init__(self, py_func, locals=locals,
                     targetoptions=targetoptions, impl_kind=impl_kind, pipeline_class=DPPLCompiler)

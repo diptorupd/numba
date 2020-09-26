@@ -11,7 +11,6 @@ import logging
 from numba.core.errors import DeprecationError, NumbaDeprecationWarning
 from numba.stencils.stencil import stencil
 from numba.core import config, extending, sigutils, registry, cpu_dispatcher
-from numba.dppl import dppl_offload_dispatcher
 
 _logger = logging.getLogger(__name__)
 
@@ -153,6 +152,7 @@ def jit(signature_or_function=None, locals={}, cache=False,
 
     parallel_option = options.get('parallel')
     if isinstance(parallel_option, dict) and parallel_option.get('offload') is True:
+        from numba.dppl import dppl_offload_dispatcher
         target = '__dppl_offload_gpu__'
 
     options['boundscheck'] = boundscheck
