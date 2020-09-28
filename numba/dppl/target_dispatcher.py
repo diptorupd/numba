@@ -1,4 +1,3 @@
-# import numba
 from numba.core import registry
 from numba import types
 import dpctl.ocldrv as ocldrv
@@ -8,25 +7,30 @@ class TargetDispatcher():
     __numba__ = 'py_func'
 
     def __init__(self, py_func, wrapper, target):
-        
         self.py_func = py_func
         self.target = target
         self.wrapper = wrapper
-        self.disp = self.get_current_disp(self.target)
         self.__compiled = {}
+        self.__doc__ = py_func.__doc__
+        self.__name__ = py_func.__name__
+        self.__module__ = py_func.__module__
 
     def __call__(self, *args, **kwargs):
-        if not self.disp in self.__compiled.keys():
-            self.__compiled[self.disp] = self.wrapper(self.py_func, self.disp)
-        
-        return self.__compiled[self.disp](*args, **kwargs)
+        return self.get_compiled()(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.get_compiled(), name)
 
     @property
     def _numba_type_(self):
-        if not self.disp in self.__compiled.keys():
-            self.__compiled[self.disp] = self.wrapper(self.py_func, self.disp)
+        return types.Dispatcher(self.get_compiled())
 
-        return types.Dispatcher(self.__compiled[self.disp])
+    def get_compiled(self):
+        disp = self.get_current_disp(self.target)
+        if not disp in self.__compiled.keys():
+            self.__compiled[disp] = self.wrapper(self.py_func, disp)
+
+        return self.__compiled[disp]
     
     def get_current_disp(self, target):
         gpu_env = None
