@@ -226,7 +226,8 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
         return disp
 
     def __wrapper(func):
-        if target == 'npyufunc' or targetoptions.get('no_cpython_wrapper') == True or sigs:
+        if (target == 'npyufunc' or targetoptions.get('no_cpython_wrapper') == True
+            or sigs or config.DISABLE_JIT):
             disp = registry.dispatcher_registry[target]
             return wrapper(func, disp)
         from numba.dppl.target_dispatcher import TargetDispatcher
