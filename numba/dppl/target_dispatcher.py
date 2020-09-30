@@ -1,6 +1,6 @@
 from numba.core import registry, serialize, dispatcher
 from numba import types
-import dpctl.ocldrv as ocldrv
+import dpctl
 
 
 class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMeta):
@@ -39,14 +39,7 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
         return self.__compiled[disp]
 
     def get_current_disp(self, target):
-        gpu_env = None
-        if ocldrv.runtime.has_gpu_device():
-            gpu_env = ocldrv.runtime.get_gpu_device().get_env_ptr()
-        current_env = None
-        if ocldrv.runtime.has_current_device():
-            current_env = ocldrv.runtime.get_current_device().get_env_ptr()
-        if (gpu_env == current_env) and ocldrv.is_available():
-            from numba.dppl import dppl_offload_dispatcher
+        if dpctl.is_in_device_context():
             return registry.dispatcher_registry['__dppl_offload_gpu__']
 
         return registry.dispatcher_registry[target]
