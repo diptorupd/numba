@@ -22,27 +22,32 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
     def __getattr__(self, name):
         return getattr(self.get_compiled(), name)
 
-    @property
-    def _numba_type_(self):
-        return types.Dispatcher(self.get_compiled())
+    def __get__(self, obj, objtype=None):
+        return self.get_compiled().__get__(obj, objtype)
+
+    def __repr__(self):
+        return self.get_compiled().__repr__()
 
     @classmethod
     def _rebuild(cls, py_func, wrapper, target, compiled):
         self = cls(py_func, wrapper, target, compiled)
         return self
 
-    def get_compiled(self):
-        disp = self.get_current_disp(self.__target)
+    def get_compiled(self, target=None):
+        if target is None:
+            target = self.__target
+
+        disp = self.get_current_disp()
         if not disp in self.__compiled.keys():
             self.__compiled[disp] = self.__wrapper(self.__py_func, disp)
 
         return self.__compiled[disp]
 
-    def get_current_disp(self, target):
+    def get_current_disp(self):
         if dpctl.is_in_device_context():
             return registry.dispatcher_registry['__dppl_offload_gpu__']
 
-        return registry.dispatcher_registry[target]
+        return registry.dispatcher_registry[self.__target]
 
     def _reduce_states(self):
         return dict(

@@ -189,19 +189,6 @@ def jit(signature_or_function=None, locals={}, cache=False,
 def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
 
     def wrapper(func, dispatcher):
-        if extending.is_jitted(func):
-            raise TypeError(
-                "A jit decorator was called on an already jitted function "
-                f"{func}.  If trying to access the original python "
-                f"function, use the {func}.py_func attribute."
-            )
-
-        if not inspect.isfunction(func):
-            raise TypeError(
-                "The decorated object is not a function (got type "
-                f"{type(func)})."
-            )
-
         if config.ENABLE_CUDASIM and target == 'cuda':
             from numba import cuda
             return cuda.jit(func)
@@ -226,10 +213,24 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
         return disp
 
     def __wrapper(func):
-        if (target == 'npyufunc' or targetoptions.get('no_cpython_wrapper') == True
-            or sigs or config.DISABLE_JIT or targetoptions.get('nopython') == False):
+        if extending.is_jitted(func):
+            raise TypeError(
+                "A jit decorator was called on an already jitted function "
+                f"{func}.  If trying to access the original python "
+                f"function, use the {func}.py_func attribute."
+            )
+
+        if not inspect.isfunction(func):
+            raise TypeError(
+                "The decorated object is not a function (got type "
+                f"{type(func)})."
+            )
+
+        if (target == 'npyufunc' or targetoptions.get('no_cpython_wrapper')
+            or sigs or config.DISABLE_JIT or not targetoptions.get('nopython')):
             disp = registry.dispatcher_registry[target]
             return wrapper(func, disp)
+
         from numba.dppl.target_dispatcher import TargetDispatcher
         disp = TargetDispatcher(func, wrapper, target)
         return disp
