@@ -1,6 +1,8 @@
 from numba.core import registry, serialize, dispatcher
 from numba import types
+from numba.core.errors import UnsupportedError
 import dpctl
+import dpctl.ocldrv as ocldrv
 
 
 class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMeta):
@@ -45,8 +47,11 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
 
     def get_current_disp(self):
         if dpctl.is_in_device_context():
+            # TODO: Add "with cpu context" behaviour
+            from numba.dppl import dppl_offload_dispatcher
             return registry.dispatcher_registry['__dppl_offload_gpu__']
-
+        if self.__target is None:
+            self.__target = 'cpu'
         return registry.dispatcher_registry[self.__target]
 
     def _reduce_states(self):
