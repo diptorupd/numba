@@ -1,13 +1,9 @@
-from __future__ import print_function, division, absolute_import
-
 import numpy as np
 import numba
-from numba import dppl
-from numba.dppl.testing import unittest
-from numba.dppl.testing import DPPLTestCase
-from numba import njit, prange
+from numba import dppl, njit, prange
+from numba.dppl.testing import unittest, DPPLTestCase
 from numba.tests.support import captured_stdout
-import dppl.ocldrv as ocldrv
+import dpctl.ocldrv as ocldrv
 
 
 def prange_example():
@@ -28,7 +24,7 @@ class TestParforMessage(DPPLTestCase):
         with captured_stdout() as got:
             jitted()
 
-        self.assertTrue('Parfor lowered on GPU' in got.getvalue())
+        self.assertTrue('Parfor lowered on DPPL-device' in got.getvalue())
 
 
 if __name__ == '__main__':
