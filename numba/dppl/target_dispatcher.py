@@ -53,14 +53,15 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
 
         return self.__compiled[disp]
 
-    def __is_with_context_target(target):
+    def __is_with_context_target(self, target):
         return target is None or target == TargetDispatcher.target_dppl
 
     def get_current_disp(self):
         target = self.__target
         parallel = self.__parallel
+        offload = isinstance(parallel, dict) and parallel.get('offload') is True
 
-        if dpctl.is_in_device_context():
+        if (dpctl.is_in_device_context() or offload):
             if not self.__is_with_context_target(target):
                 raise UnsupportedError(f"Can't use 'with' context with explicitly specified target '{target}'")
             if parallel is False or (isinstance(parallel, dict) and parallel.get('offload') is False):
@@ -74,7 +75,13 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
                 elif dpctl.get_current_device_type() == dpctl.device_type.cpu:
                     return registry.dispatcher_registry[TargetDispatcher.target_offload_cpu]
                 else:
-                    raise UnsupportedError('Unknown dppl device type')
+                    if dpctl.is_in_device_context():
+                        raise UnsupportedError('Unknown dppl device type')
+                    if offload:
+                        if dpctl.has_gpu_queues():
+                            return registry.dispatcher_registry[TargetDispatcher.target_offload_gpu]
+                        elif dpctl.has_cpu_queues():
+                            return registry.dispatcher_registry[TargetDispatcher.target_offload_cpu]
 
         if target is None:
             target = 'cpu'

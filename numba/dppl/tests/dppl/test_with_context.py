@@ -57,7 +57,7 @@ class TestWithDPPLContext(DPPLTestCase):
         func(expected)
 
         np.testing.assert_array_equal(expected, got_cpu)
-        self.assertTrue('Parfor lowered on DPPL-device' not in got_cpu_message.getvalue())
+        self.assertTrue('Parfor lowered on DPPL-device' in got_cpu_message.getvalue())
 
 
     @unittest.skipIf(not dpctl.has_gpu_queues(), "No GPU platforms available")
@@ -100,7 +100,7 @@ class TestWithDPPLContext(DPPLTestCase):
 
         with self.assertRaises(errors.UnsupportedError) as raises_4:
             with dpctl.device_context(dpctl.device_type.gpu):
-                func_no_target(a)
+                func_no_parallel(a)
 
         msg_1 = "Can't use 'with' context with explicitly specified target"
         msg_2 = "Can't use 'with' context with parallel option"
