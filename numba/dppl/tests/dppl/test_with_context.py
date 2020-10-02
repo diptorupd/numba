@@ -5,7 +5,6 @@ from numba.core import errors
 from numba.tests.support import captured_stdout
 from numba.dppl.testing import DPPLTestCase, unittest
 import dpctl
-import dpctl.ocldrv as ocldrv
 
 
 @unittest.skipIf(not dpctl.has_gpu_queues(), "No GPU platforms available")

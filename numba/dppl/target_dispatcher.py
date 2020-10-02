@@ -2,7 +2,6 @@ from numba.core import registry, serialize, dispatcher
 from numba import types
 from numba.core.errors import UnsupportedError
 import dpctl
-import dpctl.ocldrv as ocldrv
 from numba.core.compiler_lock import global_compiler_lock
 
 

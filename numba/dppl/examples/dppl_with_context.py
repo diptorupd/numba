@@ -1,7 +1,6 @@
 import numpy as np
 from numba import dppl, njit, prange
 import dpctl
-import dpctl.ocldrv as ocldrv
 
 
 @njit
@@ -21,10 +20,10 @@ def main():
     b = np.ones(N)
     c = np.ones(N)
 
-    if ocldrv.has_gpu_device:
+    if dpctl.has_gpu_queues():
         with dpctl.device_context(dpctl.device_type.gpu):
             f(a, b, c, N)
-    elif ocldrv.has_cpu_device:
+    elif dpctl.has_cpu_queues():
         with dpctl.device_context(dpctl.device_type.cpu):
             f(a, b, c, N)
     else:
