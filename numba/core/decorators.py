@@ -147,15 +147,8 @@ def jit(signature_or_function=None, locals={}, cache=False,
     if 'target' in options:
         target = options.pop('target')
         warnings.warn("The 'target' keyword argument is deprecated.", NumbaDeprecationWarning)
-    elif '_target' in options:
-        target = options.pop('_target', 'cpu')
     else:
-        target = None
-
-    parallel_option = options.get('parallel')
-    if isinstance(parallel_option, dict) and parallel_option.get('offload') is True:
-        from numba.dppl import dppl_offload_dispatcher
-        target = '__dppl_offload_gpu__'
+        target = options.pop('_target', None)
 
     options['boundscheck'] = boundscheck
 
@@ -237,7 +230,7 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
             return wrapper(func, disp)
 
         from numba.dppl.target_dispatcher import TargetDispatcher
-        disp = TargetDispatcher(func, wrapper, target)
+        disp = TargetDispatcher(func, wrapper, target, targetoptions.get('parallel'))
         return disp
 
     return __wrapper

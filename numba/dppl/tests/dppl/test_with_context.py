@@ -7,9 +7,9 @@ from numba.dppl.testing import DPPLTestCase, unittest
 import dpctl
 
 
-@unittest.skipIf(not dpctl.has_gpu_queues(), "No GPU platforms available")
-@unittest.skipIf(not dpctl.has_cpu_queues(), "No CPU platforms available")
 class TestWithDPPLContext(DPPLTestCase):
+
+    @unittest.skipIf(not dpctl.has_gpu_queues(), "No GPU platforms available")
     def test_with_dppl_context_gpu(self):
 
         @njit
@@ -34,9 +34,9 @@ class TestWithDPPLContext(DPPLTestCase):
         np.testing.assert_array_equal(expected, got_gpu)
         self.assertTrue('Parfor lowered on DPPL-device' in got_gpu_message.getvalue())
 
-
+    @unittest.skipIf(not dpctl.has_cpu_queues(), "No CPU platforms available")
     def test_with_dppl_context_cpu(self):
-        
+
         @njit
         def nested_func(a, b):
             np.sin(a, b)
@@ -60,6 +60,7 @@ class TestWithDPPLContext(DPPLTestCase):
         self.assertTrue('Parfor lowered on DPPL-device' not in got_cpu_message.getvalue())
 
 
+    @unittest.skipIf(not dpctl.has_gpu_queues(), "No GPU platforms available")
     def test_with_dppl_context_target(self):
 
         @njit(target='cpu')
@@ -76,6 +77,12 @@ class TestWithDPPLContext(DPPLTestCase):
             a = np.ones((64), dtype=np.float64)
             nested_func_target(a, b)
 
+        @njit(parallel=False)
+        def func_no_parallel(b):
+            a = np.ones((64), dtype=np.float64)
+            return a
+
+
         a = np.ones((64), dtype=np.float64)
         b = np.ones((64), dtype=np.float64)
 
@@ -91,10 +98,16 @@ class TestWithDPPLContext(DPPLTestCase):
             with dpctl.device_context(dpctl.device_type.gpu):
                 func_no_target(a)
 
-        msg = "Unsupported defined 'target' with using context device"
-        self.assertTrue(msg in str(raises_1.exception))
-        self.assertTrue(msg in str(raises_2.exception))
-        self.assertTrue(msg in str(raises_3.exception))
+        with self.assertRaises(errors.UnsupportedError) as raises_4:
+            with dpctl.device_context(dpctl.device_type.gpu):
+                func_no_target(a)
+
+        msg_1 = "Can't use 'with' context with explicitly specified target"
+        msg_2 = "Can't use 'with' context with parallel option"
+        self.assertTrue(msg_1 in str(raises_1.exception))
+        self.assertTrue(msg_1 in str(raises_2.exception))
+        self.assertTrue(msg_1 in str(raises_3.exception))
+        self.assertTrue(msg_2 in str(raises_4.exception))
 
 
 if __name__ == '__main__':
