@@ -36,7 +36,6 @@ class TestWithDPPLContext(DPPLTestCase):
         self.assertTrue('Parfor lowered on DPPL-device' in got_gpu_message.getvalue())
 
 
-    # TODO: Change "with cpu context" test
     def test_with_dppl_context_cpu(self):
         
         @njit
@@ -59,7 +58,7 @@ class TestWithDPPLContext(DPPLTestCase):
         func(expected)
 
         np.testing.assert_array_equal(expected, got_cpu)
-        self.assertTrue('Parfor lowered on DPPL-device' in got_cpu_message.getvalue())
+        self.assertTrue('Parfor lowered on DPPL-device' not in got_cpu_message.getvalue())
 
 
     def test_with_dppl_context_target(self):
