@@ -147,6 +147,8 @@ def jit(signature_or_function=None, locals={}, cache=False,
     if 'target' in options:
         target = options.pop('target')
         warnings.warn("The 'target' keyword argument is deprecated.", NumbaDeprecationWarning)
+    elif '_target' in options:
+        target = options.pop('_target', 'cpu')
     else:
         target = None
 
@@ -228,11 +230,10 @@ def _jit(sigs, locals, target, cache, targetoptions, **dispatcher_args):
 
         if (target == 'npyufunc' or targetoptions.get('no_cpython_wrapper')
             or sigs or config.DISABLE_JIT or not targetoptions.get('nopython')):
-            # TODO: Fix default target
-            _target = target
-            if _target is None:
-                _target = 'cpu'
-            disp = registry.dispatcher_registry[_target]
+            target_ = target
+            if target_ is None:
+                target_ = 'cpu'
+            disp = registry.dispatcher_registry[target_]
             return wrapper(func, disp)
 
         from numba.dppl.target_dispatcher import TargetDispatcher

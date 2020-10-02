@@ -47,6 +47,8 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
 
     def get_current_disp(self):
         if dpctl.is_in_device_context():
+            if self.__target is not None:
+                raise UnsupportedError("Unsupported defined 'target' with using context device")
             # TODO: Add "with cpu context" behaviour
             from numba.dppl import dppl_offload_dispatcher
             return registry.dispatcher_registry['__dppl_offload_gpu__']
