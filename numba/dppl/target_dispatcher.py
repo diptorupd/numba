@@ -3,6 +3,7 @@ from numba import types
 from numba.core.errors import UnsupportedError
 import dpctl
 import dpctl.ocldrv as ocldrv
+from numba.core.compiler_lock import global_compiler_lock
 
 
 class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMeta):
@@ -41,20 +42,26 @@ class TargetDispatcher(serialize.ReduceMixin, metaclass=dispatcher.DispatcherMet
 
         disp = self.get_current_disp()
         if not disp in self.__compiled.keys():
-            self.__compiled[disp] = self.__wrapper(self.__py_func, disp)
+            with global_compiler_lock:
+                if not disp in self.__compiled.keys():
+                    self.__compiled[disp] = self.__wrapper(self.__py_func, disp)
 
         return self.__compiled[disp]
 
     def get_current_disp(self):
+        target = self.__target
+
         if dpctl.is_in_device_context():
             if self.__target is not None:
                 raise UnsupportedError("Unsupported defined 'target' with using context device")
             # TODO: Add "with cpu context" behaviour
             from numba.dppl import dppl_offload_dispatcher
             return registry.dispatcher_registry['__dppl_offload_gpu__']
-        if self.__target is None:
-            self.__target = 'cpu'
-        return registry.dispatcher_registry[self.__target]
+
+        if target is None:
+            target = 'cpu'
+
+        return registry.dispatcher_registry[target]
 
     def _reduce_states(self):
         return dict(
