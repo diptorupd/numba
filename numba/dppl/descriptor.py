@@ -1,17 +1,12 @@
 from __future__ import print_function, division, absolute_import
 from numba.core.descriptors import TargetDescriptor
 from numba.core.options import TargetOptions
-
 from numba.core import dispatcher, utils, typing
-from .target import DPPLTargetContext, DPPLTypingContext
-
 from numba.core.cpu import CPUTargetOptions
-
+from .target import DPPLTargetContext, DPPLTypingContext
 
 class DPPLTarget(TargetDescriptor):
     options = CPUTargetOptions
-    #typingctx = DPPLTypingContext()
-    #targetctx = DPPLTargetContext(typingctx)
 
     @utils.cached_property
     def _toplevel_target_context(self):
@@ -36,7 +31,6 @@ class DPPLTarget(TargetDescriptor):
         The typing context for DPPL targets.
         """
         return self._toplevel_typing_context
-
 
 
 # The global DPPL target

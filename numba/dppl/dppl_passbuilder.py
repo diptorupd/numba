@@ -88,7 +88,6 @@ class DPPLPassBuilder(object):
         pm.add_pass(InlineOverloads, "inline overloaded functions")
 
 
-
     @staticmethod
     def define_nopython_pipeline(state, name='dppl_nopython'):
         """Returns an nopython mode pipeline based PassManager
