@@ -58,7 +58,6 @@ class DPPLCompiler(CompilerBase):
         # this maintains the objmode fallback behaviour
         pms = []
         if not self.state.flags.force_pyobject:
-            #print("Numba-DPPL [INFO]: Using Numba-DPPL pipeline")
             pms.append(DPPLPassBuilder.define_nopython_pipeline(self.state))
         if self.state.status.can_fallback or self.state.flags.force_pyobject:
             pms.append(
@@ -116,6 +115,7 @@ def compile_with_dppl(pyfunc, return_type, args, debug):
 def compile_kernel(sycl_queue, pyfunc, args, access_types, debug=False):
     if DEBUG:
         print("compile_kernel", args)
+    # FIXME : Should we assert that sycl_queue is not None
     if not sycl_queue:
         # This will be get_current_queue
         sycl_queue = dpctl.get_current_queue()
@@ -123,11 +123,12 @@ def compile_kernel(sycl_queue, pyfunc, args, access_types, debug=False):
     cres = compile_with_dppl(pyfunc, None, args, debug=debug)
     func = cres.library.get_function(cres.fndesc.llvm_func_name)
     kernel = cres.target_context.prepare_ocl_kernel(func, cres.signature.args)
-    # The kernel objet should have a reference to the target context it is compiled for.
-    # This is needed as we intend to shape the behavior of the kernel down the line
-    # depending on the target context. For example, we want to link our kernel object
-    # with implementation containing atomic operations only when atomic operations
-    # are being used in the kernel.
+    # The kernel object should store a reference to the the compilation
+    # target context. By storing the reference, we can later use the stored
+    # value to modify the compilation depending on the target context. The
+    # feature is used when we link a kernel that uses atomic operations
+    # in our target context to a precompiled SPIR-V binary containing the
+    # atomic function definition.
     oclkern = DPPLKernel(context=cres.target_context,
                          sycl_queue=sycl_queue,
                          llvm_module=kernel.module,
@@ -154,17 +155,13 @@ def compile_kernel_parfor(sycl_queue, func_ir, args, args_with_addrspaces,
         print("compile_kernel_parfor signature", cres.signature.args)
         for a in cres.signature.args:
             print(a, type(a))
-#            if isinstance(a, types.npytypes.Array):
-#                print("addrspace:", a.addrspace)
 
     kernel = cres.target_context.prepare_ocl_kernel(func, cres.signature.args)
-    #kernel = cres.target_context.prepare_ocl_kernel(func, args_with_addrspaces)
     oclkern = DPPLKernel(context=cres.target_context,
                          sycl_queue=sycl_queue,
                          llvm_module=kernel.module,
                          name=kernel.name,
                          argtypes=args_with_addrspaces)
-                         #argtypes=cres.signature.args)
     return oclkern
 
 
@@ -261,8 +258,9 @@ def _ensure_valid_work_item_grid(val, sycl_queue):
         error_message = ("Unsupported number of work item dimensions ")
         raise ValueError(error_message)
     '''
-
-    return list(val[::-1]) # reversing due to sycl and opencl interop kernel range mismatch semantic
+    # FIXME: reversing due to sycl and opencl interop kernel range mismatch
+    # semantic
+    return list(val[::-1])
 
 def _ensure_valid_work_group_size(val, work_item_grid):
 
@@ -279,7 +277,9 @@ def _ensure_valid_work_group_size(val, work_item_grid):
                          "dimensions of global and local work items has to be the same ")
         raise ValueError(error_message)
 
-    return list(val[::-1]) # reversing due to sycl and opencl interop kernel range mismatch semantic
+    # FIXME: reversing due to sycl and opencl interop kernel range mismatch
+    # semantic
+    return list(val[::-1])
 
 
 class DPPLKernelBase(object):
@@ -520,7 +520,6 @@ class JitDPPLKernel(DPPLKernelBase):
         # we were previously using the _env_ptr of the device_env, the sycl_queue
         # should be sufficient to cache the compiled kernel for now, but we should
         # use the device type to cache such kernels
-        #key_definitions = (self.sycl_queue, argtypes)
         key_definitions = (argtypes)
         result = self.definitions.get(key_definitions)
         if result:
