@@ -10,9 +10,10 @@
 *.ll
 .coverage
 .nfs*
+.eggs
 tags
 MANIFEST
-
+numba/dppl/ocl/atomics/atomic_ops.spir
 build/
 docs/_build/
 docs/gh-pages/
