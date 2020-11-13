@@ -71,7 +71,7 @@ class DPPLCompiler(CompilerBase):
 
 
 def compile_with_dppl(pyfunc, return_type, args, debug):
-    # First compilation will trigger the initialization of the OpenCL backend.
+    # First compilation will trigger the initialization of the DPPY backend.
     from .descriptor import dppl_target
 
     typingctx = dppl_target.typing_context

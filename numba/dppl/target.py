@@ -255,6 +255,7 @@ class DPPLTargetContext(BaseContext):
     def declare_function(self, module, fndesc):
         fnty = self.call_conv.get_function_type(fndesc.restype, fndesc.argtypes)
         fn = module.get_or_insert_function(fnty, name=fndesc.mangled_name)
+        # FIXME: should be based on debuginfo flag
         fn.attributes.add('alwaysinline')
         ret = super(DPPLTargetContext, self).declare_function(module, fndesc)
         # XXX: Refactor fndesc instead of this special case
